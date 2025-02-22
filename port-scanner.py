@@ -2,6 +2,8 @@ import socket
 import threading
 import re
 from queue import Queue
+import subprocess
+import platform
 
 # Lock for thread-safe printing
 print_lock = threading.Lock()
@@ -45,12 +47,26 @@ def validate_ip(ip):
     else:
         return False
 
+def check_host_reachable(ip):
+    """Pings the target IP to check if it is reachable."""
+    param = "-n" if platform.system().lower() == "windows" else "-c"
+    command = ["ping", param, "1", ip]
+    try:
+        subprocess.check_output(command, stderr=subprocess.DEVNULL)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
 def main():
     print("Basic Port Scanner\n--------------------")
     
     target_ip = input("Enter target IP address: ").strip()
     if not validate_ip(target_ip):
         print("[-] Invalid IP address format. Please enter a valid IPv4 or IPv6 address.")
+        return
+
+    if not check_host_reachable(target_ip):
+        print(f"[-] The IP address {target_ip} is not reachable or does not exist.")
         return
 
     print(f"[+] Scanning Target IP: {target_ip}")
@@ -81,4 +97,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
